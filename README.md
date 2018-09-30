@@ -42,15 +42,15 @@ To Test code:
 
 4: Parsing the Data directly
 
-![picture](projectimages/005_parsing_direct.PNG)
+![picture](testcases/005_parsing_direct.PNG)
 
-![picture](projectimages/006_parsing_direct_output.PNG)
+![picture](testcases/006_parsing_direct_output.PNG)
 
 
 
 5: Giving wrong Input
 
-![picture](projectimages/007_incaseofwronginput.PNG)
+![picture](testcases/007_incaseofwronginput.PNG)
 
 ## Future Enhancements required
 - Multi level HTML parsing using Recussion
