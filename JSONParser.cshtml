@@ -1,0 +1,298 @@
+﻿
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>JSON Parser</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+
+    <!-- jQuery library -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+    <!-- Latest compiled JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+</head>
+<body>
+    <div id="js-container" class="container">
+        <div class="jumbotron">
+            <h1>WELCOME TO JSON TO HTML PARSER</h1>
+            <p>
+                Simple parser that takes *JSON* from any source. (100 objects minimum)
+                and print(display) it in the form of a ordered list in HTML.
+            </p> 
+        </div>
+        <div>
+            <h2>SELECT ONE OF THE OPTION</h2>
+            <!-- Parsing Options -->
+            <form id="selecytionform">
+                <label class="radio-inline">
+                    <input type="radio" name="selectoption" value="optn_parseurl" checked>Parse using URL
+                </label>
+                <label class="radio-inline">
+                    <input type="radio" name="selectoption" value="optn_uploaddoc">Parse using Upload Functionality
+                </label>
+                <label class="radio-inline">
+                    <input type="radio" name="selectoption" value="optn_directpaste">Direct Paste in Text Area
+                </label>
+            </form>
+            <!-- Form Inputs based on different parsing options -->
+            <form style="padding-top: 40px;" id="dataform">
+                <div class="form-group" id="js-parseurl">
+                    <label for="js-sel-parseurl">URL:</label>
+                    <input type="text" class="form-control" id="js-sel-parseurl">
+                </div>
+                <div class="form-group" id="js-uploaddoc" style="display: none;">
+                    <input type="file" name="file" id="js-sel-uploaddoc" />
+                    <label for="js-sel-uploaddoc">BROWSE</label>
+                    <input type="hidden" data-url="" id="js-hdn-uploaddoc" />
+                </div>
+                <div class="form-group" id="js-directpaste" style="display: none;">
+                    <label for="js-sel-directpaste">Input Area:</label>
+                    <textarea class="form-control" rows="5" id="js-sel-directpaste"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="radio-inline">
+                        <input type="radio" name="leveltype" value="optn_single" checked>Form Single Level of List
+                    </label>
+                    <label class="radio-inline">
+                        <input type="radio" name="leveltype" value="optn_multiple">Form Multiple Level of List
+                    </label>
+                    <button type="button" id="js-btn-sel-parseurl" class="btn btn-primary" style="margin-left: 20px;">Parse</button>
+                </div>
+            </form>
+            <!-- HTML result will be shown here -->
+            <div id="js-display-results">
+            </div>
+            <!-- Error message block -->
+            <div class="alert alert-danger" id="js-error" style="display: none">
+                <strong>JSON not Valid</strong> The JSON provided is not valid.
+            </div>
+            <!-- Information block -->
+            <div class="alert alert-info" id="js-info" style="display: none">
+                <strong>Info!</strong> Work in Progress.
+            </div>
+        </div>
+    </div>
+    
+
+    <script>
+        $(window).on("load", function () {
+            /* Change event for option types */
+            $('input[type=radio][name=selectoption]').change(function () {
+                $("#js-error").css("display", "none");
+                $("#js-info").css("display", "none");
+                $("#js-display-results").html("");
+                if (this.value == 'optn_parseurl') {
+                    $("#js-parseurl").css("display", "block");
+                    $("#js-uploaddoc").css("display", "none");
+                    $("#js-directpaste").css("display", "none");
+                }
+                else if (this.value == 'optn_uploaddoc') {
+                    $("#js-parseurl").css("display", "none");
+                    $("#js-uploaddoc").css("display", "block");
+                    $("#js-directpaste").css("display", "none");
+                }
+                else if (this.value == 'optn_directpaste') {
+                    $("#js-parseurl").css("display", "none");
+                    $("#js-uploaddoc").css("display", "none");
+                    $("#js-directpaste").css("display", "block");
+                }
+            });
+
+            /* Change event for leveltype: Multi parser or single parser */
+            $('input[type=radio][name=leveltype]').change(function () {
+                $("#js-error").css("display", "none");
+                $("#js-info").css("display", "none");
+                $("#js-display-results").html("");
+            });
+
+            /* Click event of Parse Button  */
+            $("#js-container").on("click", "#js-btn-sel-parseurl", function (e) {
+                if ($('input[name=selectoption]:checked', '#selecytionform').val() == 'optn_parseurl') {
+                    ParseURL($("#js-sel-parseurl").val()).then(function (result) {
+                        buildHTML(result);
+                    })
+                }
+                else if ($('input[name=selectoption]:checked', '#selecytionform').val() == 'optn_uploaddoc') {
+                    UploaddDoc().then(function (result) {
+                        buildHTML(result);
+                    })
+                }
+                else if ($('input[name=selectoption]:checked', '#selecytionform').val() == 'optn_directpaste') {
+                    DirectPaste().then(function (result) {
+                        buildHTML(result);
+                    })
+                }
+            });
+
+            /* Upload Document functionality  */
+            var fileReader = new FileReader();
+            $('#js-sel-uploaddoc').on('change', function () {
+                
+                fileReader.onload = function () {
+                    var data = fileReader.result;  // data <-- in this var you have the file data in Base64 format
+                };
+                fileReader.readAsDataURL($('#js-sel-uploaddoc').prop('files')[0]);
+            });
+
+            /* Parsing URL functionality  */
+            function ParseURL(_url) {
+                return new Promise(function (resolve, reject) {
+                    var _url = $("#js-sel-parseurl").val();
+                    $.ajax({
+                        url: _url,
+                        dataType: "json",
+                        success: function (data, txt, upo) {
+                            debugger;
+                            return resolve(JSON.stringify(data));
+                        },
+                        error: function (err) {
+                            $("#js-error").css("display", "block");
+                            return reject(err);
+                        }
+                    });
+                });
+            }
+
+            /* upload documents functionality  */
+            function UploaddDoc() {
+                return new Promise(function (resolve, reject) {
+
+                    var _url = fileReader.result;
+                    $.ajax({
+                        url: _url,
+                        dataType: "json",
+                        success: function (data, txt, upo) {
+                            debugger;
+                            return resolve(JSON.stringify(data));
+                        },
+                        error: function (err) {
+                            $("#js-error").css("display", "block");
+                            return reject(err);
+                        }
+                    });
+                });
+            }
+
+            /* Direct paste functionality */
+            function DirectPaste() {
+                return new Promise(function (resolve, reject) {                    
+                    return resolve($("#js-sel-directpaste").val());
+                });
+            }
+
+            /* Call back method of all the parsing functionalities.  */
+            function buildHTML(jsonData)
+            {
+                if (isValidJSON(jsonData)) {
+                    $("#js-error").css("display", "none");
+                    $("#js-info").css("display", "none");
+                    var json_obj = $.parseJSON(jsonData);
+
+                    if ($('input[name=leveltype]:checked', '#dataform').val() == 'optn_single') {
+                        formSingleLevel(json_obj);
+                    }
+                    else if ($('input[name=leveltype]:checked', '#dataform').val() == 'optn_multiple') {
+                        formMultiLevel(json_obj);
+                    }
+                }
+                else {
+                    $("#js-error").css("display", "block");
+                }
+            }
+
+            /* Validates the JSON */
+            function isValidJSON(jsonData) {
+                var isvalid = false;
+
+                try {
+                    var json = $.parseJSON(jsonData);
+                    isvalid = true;
+                }
+                catch (err) {
+                    isvalid = false;
+                }
+                return isvalid;
+            }
+
+            /* removing duplicate keys */
+            function removeDuplicates(arr) {
+                let unique_array = []
+                for (let i = 0; i < arr.length; i++) {
+                    if (unique_array.indexOf(arr[i]) == -1) {
+                        unique_array.push(arr[i])
+                    }
+                }
+                return unique_array
+            }
+
+            /* Single Level printing in HTML */
+            function formSingleLevel(json_obj) {
+                var object_keys = Object.keys(json_obj);
+                object_keys = removeDuplicates(object_keys);
+                if (object_keys && object_keys.length > 0) {
+                    var text = "<ol>";
+                    var innerText = "";
+                    for (var i = 0; i < object_keys.length; i++) {
+                        innerText = innerText + "<li>" + object_keys[i] + "</li>";
+                    }
+                    text = text + innerText + "</ol>"
+                    $("#js-display-results").html(text);
+                }
+            }
+
+            /* Multi Level printing in HTML */
+            function formMultiLevel(json_obj) {
+
+                $("#js-info").css("display", "block");
+                return;
+
+                var object_array = Object.entries(json_obj);
+                // todo: for multiline, not removing the duplicates as of now.
+                //object_keys = removeDuplicates(object_keys);
+                if (object_array && object_array.length > 0) {
+                    var text = "<ol>";
+                    var innerText = "";
+                    for (var i = 0; i < object_array.length; i++) {
+                        if (isArray(object_array[i])) {
+                            innerText = innerText + "<li><ol>";
+                            for (var j = 0; j < object_array[i].length; j++) {
+                                innerText = innerText + "<li>" + object_array[i][j] + "<li>";
+                                if (isArray(object_array[i][j])) {
+                                    innerText = innerText + "<li><ol>";
+                                    for (var k = 0; k < object_array[i][j].length; k++) {
+                                        innerText = innerText + "<li>" + object_array[i][j][k] + "<li>";
+                                    }
+                                    innerText = innerText + "</ol></li>";
+                                }
+                                else {
+                                    innerText = innerText + "<li>" + object_array[i] + "</li>";
+                                }
+                            }
+                            innerText = innerText + "</ol></li>";
+                        }
+                        else {
+                            innerText = innerText + "<li>" + object_array[i] + "</li>";
+                        }
+                    }
+                    text = text + innerText + "</ol>"
+                    $("#js-display-results").html(text);
+                }
+            }
+
+
+            /* For multi Level: use of recurssion */
+            function formMultiLevelRecurssion(object_array) {
+                 // todo: try recussion 
+            }
+
+            /* IsArray */
+            function isArray(arr) {
+                return arr instanceof Array;
+            }
+
+        });
+    </script>
+</body>
+</html>
